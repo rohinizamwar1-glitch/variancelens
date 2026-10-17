@@ -1,0 +1,39 @@
+{% extends "base.html" %}{% block title %}Reports{% endblock %}
+{% block content %}
+<section class="intro">
+  <p class="eyebrow">SAVED REPORTS</p>
+  <h1>Every review, kept.</h1>
+  <p class="intro-copy">Each analysis is stored separately, so later months can be compared with earlier ones.</p>
+</section>
+<section class="workspace">
+  <form method="get" class="filter-row">
+    <label for="unit">Business unit</label>
+    <select id="unit" name="unit" onchange="this.form.submit()">
+      <option value="">All</option>
+      {% for u in units %}<option value="{{ u }}" {{ 'selected' if u == unit }}>{{ u }}</option>{% endfor %}
+    </select>
+  </form>
+  {% if reports %}
+  <div class="table-scroll">
+    <table class="results-table">
+      <thead><tr><th>#</th><th>Month</th><th>Business unit</th><th>Net variance</th><th>Backed by evidence</th><th>Confidence</th><th>Source</th><th>Guardrails</th><th>Review</th></tr></thead>
+      <tbody>
+      {% for r in reports %}
+        <tr>
+          <td><a href="{{ url_for('report', report_id=r.id) }}">#{{ r.id }}</a></td>
+          <td>{{ r.period }}</td><td>{{ r.business_unit }}</td>
+          <td>{{ r.total_variance|signed }}</td><td>{{ r.explained_share|share }}</td>
+          <td>{{ r.overall_confidence }}</td>
+          <td><span class="chip {{ 'chip-ai' if r.status == 'ai' else 'chip-calc' }}">{{ 'AI' if r.status == 'ai' else 'Calculated' }}</span></td>
+          <td>{{ r.guard_count }}</td>
+          <td><span class="chip review-{{ r.review }}">{{ r.review|title }}</span></td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+    <p class="muted">No reports yet. <a href="{{ url_for('index', sample=1) }}">Try the sample review.</a></p>
+  {% endif %}
+</section>
+{% endblock %}

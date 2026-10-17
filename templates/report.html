@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+{% block title %}{{ s.business_unit }} · {{ s.period }}{% endblock %}
+{% macro conf_class(c) %}{{ 'good' if c >= 70 else 'mid' if c >= 45 else 'low' }}{% endmacro %}
+{% block content %}
+<section class="intro report-head">
+  <div>
+    <p class="eyebrow">REPORT #{{ r.id }} · {{ r.created_at }} UTC</p>
+    <h1>{{ s.business_unit }} — {{ s.period }}</h1>
+  </div>
+  <div class="head-actions">
+    <a class="button button-secondary" href="{{ url_for('index', **{'from': r.id}) }}">Edit &amp; re-run</a>
+    <button class="button button-secondary" onclick="window.print()">Print</button>
+  </div>
+</section>
+
+<section class="answer-card">
+  <div class="answer-text">
+    <p class="eyebrow">ANSWER FOR LEADERSHIP</p>
+    <p class="headline">{{ ai.headline }}</p>
+    {% if ai.cannot_conclude %}<p class="cannot"><strong>What the data cannot tell us:</strong> {{ ai.cannot_conclude }}</p>{% endif %}
+    <p class="muted">
+      {% if ai.status == 'ai' %}<span class="chip chip-ai">AI-worded</span> {{ ai.provider|title }} · {{ ai.model }} · {{ ai.latency_ms }} ms
+      {% else %}<span class="chip chip-calc">Calculated only</span> {{ ai.error }}{% endif %}
+    </p>
+  </div>
+  <div class="confidence-dial {{ conf_class(ai.overall_confidence) }}">
+    <strong>{{ ai.overall_confidence }}</strong><span>/ 100</span>
+    <small>overall confidence</small>
+  </div>
+</section>
+
+<div class="summary-grid five">
+  <div class="summary-card"><span>Forecast</span><strong>{{ a.total_forecast|amount }}</strong></div>
+  <div class="summary-card"><span>Actual</span><strong>{{ a.total_actual|amount }}</strong></div>
+  <div class="summary-card"><span>Net variance</span><strong>{{ a.total_variance|signed }}</strong><small>actual − forecast</small></div>
+  <div class="summary-card"><span>Gross movement</span><strong>{{ a.gross_variance|amount }}</strong><small>sum of all gaps, ignoring sign</small></div>
+  <div class="summary-card"><span>Backed by evidence</span><strong>{{ a.explained_share|share }}</strong><small>of gross movement</small></div>
+</div>
+
+{% if a.data_flags or ai.guard_flags %}
+<section class="flags">
+  {% if a.data_flags %}<div class="error-message"><strong>Check the data first</strong><ul>{% for f in a.data_flags %}<li>{{ f }}</li>{% endfor %}</ul></div>{% endif %}
+  {% if ai.guard_flags %}<div class="guard-message"><strong>Guardrails applied ({{ ai.guard_flags|length }})</strong><ul>{% for f in ai.guard_flags %}<li>{{ f }}</li>{% endfor %}</ul></div>{% endif %}
+</section>
+{% endif %}
+
+<section class="results-section">
+  <div class="section-heading">
+    <div><p class="eyebrow">01 / KEY DRIVERS</p><h2>What moved, and why we think so</h2></div>
+    <span class="formula-note">Key drivers = fewest material lines explaining ≥ 80% of gross movement (covered: {{ a.key_coverage|share }})</span>
+  </div>
+  {% set items = {} %}{% for i in a['items'] %}{% set _ = items.update({i.category: i}) %}{% endfor %}
+  <div class="driver-list">
+    {% for d in ai.drivers %}{% set i = items[d.category] %}
+    <article class="driver {{ 'key' if d.key_driver }}">
+      <header>
+        <h3>{{ d.category }}</h3>
+        <span class="chip cause-{{ d.cause }}">{{ CAUSE_LABELS.get(d.cause, d.cause) }}</span>
+        <span class="chip tier-{{ i.tier|lower }}">{{ i.tier }}</span>
+        {% if d.key_driver %}<span class="chip chip-key">Key driver</span>{% endif %}
+        {% if i.recurring %}<span class="chip chip-recur">Recurring pattern</span>{% endif %}
+      </header>
+      <p class="driver-figures">
+        <span class="{{ i.assessment|lower }}">{{ i.variance|signed }}</span>
+        {% if i.pct is not none %}({{ i.pct|pct }}){% endif %} · {{ i.share|share }} of movement · {{ i.assessment }}
+      </p>
+      <p>{{ d.explanation }}</p>
+      <div class="conf-row">
+        <div class="bar"><span class="fill {{ conf_class(d.confidence) }}" style="width: {{ d.confidence }}%"></span><span class="ceiling" style="left: {{ i.confidence_ceiling }}%" title="Evidence ceiling"></span></div>
+        <small>{{ d.confidence }}/100 · evidence {{ d.evidence_band }} (ceiling {{ i.confidence_ceiling }})</small>
+      </div>
+      {% if d.follow_up_question %}<p class="follow-up"><strong>Ask next:</strong> {{ d.follow_up_question }}</p>{% endif %}
+      <details>
+        <summary>How the logic layer decided</summary>
+        <ul>{% for reason in i.cause_reasons %}<li>{{ reason }}</li>{% endfor %}</ul>
+        {% if i.price_volume %}<p class="muted">Price/unit: {{ i.price_volume.price_forecast|amount }} → {{ i.price_volume.price_actual|amount }}</p>{% endif %}
+        {% for g in d.guard %}<p class="guard-inline">⚑ {{ g }}</p>{% endfor %}
+      </details>
+    </article>
+    {% else %}
+      <p class="muted">No category crossed the materiality thresholds.</p>
+    {% endfor %}
+  </div>
+</section>
+
+<section class="results-section">
+  <div class="section-heading"><div><p class="eyebrow">02 / ALL CATEGORIES</p><h2>Full breakdown</h2></div>
+    <span class="formula-note">Material if |variance| ≥ {{ s.amount_threshold|amount }} or ≥ {{ s.pct_threshold }}% of forecast</span></div>
+  <div class="table-scroll">
+    <table class="results-table">
+      <thead><tr><th>#</th><th>Category</th><th>Forecast</th><th>Actual</th><th>Variance</th><th>%</th><th>Share</th><th>Tier</th><th>Assessment</th><th>Cause (logic)</th></tr></thead>
+      <tbody>
+      {% for i in a['items'] %}
+        <tr class="{{ 'is-key' if i.key_driver }}">
+          <td>{{ i.rank }}</td><th scope="row">{{ i.category }}</th>
+          <td>{{ i.forecast|amount }}</td><td>{{ i.actual|amount }}</td>
+          <td class="{{ i.assessment|lower }}">{{ i.variance|signed }}</td>
+          <td>{{ i.pct|pct }}</td><td>{{ i.share|share }}</td>
+          <td><span class="chip tier-{{ i.tier|lower }}">{{ i.tier }}</span></td>
+          <td>{{ i.assessment }}</td><td>{{ CAUSE_LABELS.get(i.cause, i.cause) if i.tier != 'Low' else '—' }}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <p class="results-footnote">Compared with {{ a.history_periods }} earlier saved month(s) for this business unit.{% if s.analyst_notes %} Analyst notes: “{{ s.analyst_notes }}”{% endif %}</p>
+</section>
+
+<section class="workspace review-box">
+  <div class="section-heading"><div><p class="eyebrow">03 / YOUR REVIEW</p><h2>Would you send this to leadership?</h2></div>
+    <span class="chip review-{{ r.review }}">{{ r.review|title }}</span></div>
+  <form method="post" action="{{ url_for('review', report_id=r.id) }}" class="review-form">
+    <input name="comment" type="text" maxlength="500" placeholder="Optional: what was wrong or missing?" value="{{ r.review_comment }}">
+    <button class="button button-primary" name="review" value="accepted">Yes, usable</button>
+    <button class="button button-secondary" name="review" value="rejected">No, not usable</button>
+  </form>
+</section>
+{% endblock %}
