@@ -1,0 +1,68 @@
+{% extends "base.html" %}{% block title %}Admin{% endblock %}
+{% block content %}
+{% set s = d.stats %}
+<section class="intro report-head">
+  <div>
+    <p class="eyebrow">ADMIN DASHBOARD</p>
+    <h1>Is the assistant trustworthy?</h1>
+    <p class="intro-copy">Usage, AI health and how often the guardrails had to step in.</p>
+  </div>
+  <div class="head-actions">
+    <form method="post" action="{{ url_for('seed_demo') }}"><button class="button button-secondary">Seed demo history</button></form>
+    <form method="post" action="{{ url_for('admin_logout') }}"><button class="button button-secondary">Sign out</button></form>
+  </div>
+</section>
+
+<div class="summary-grid five">
+  <div class="summary-card"><span>Reports</span><strong>{{ s.total }}</strong><small>{{ s.ai_runs }} AI · {{ s.fallback_runs }} calculated</small></div>
+  <div class="summary-card"><span>Fallback rate</span><strong>{{ s.fallback_rate }}%</strong><small>AI unavailable or not needed</small></div>
+  <div class="summary-card"><span>Avg confidence</span><strong>{{ s.avg_confidence }}</strong><small>out of 100</small></div>
+  <div class="summary-card"><span>Guardrail hits</span><strong>{{ s.guard_total }}</strong><small>in {{ s.runs_with_guards }} report(s)</small></div>
+  <div class="summary-card"><span>Analyst acceptance</span><strong>{{ s.acceptance_rate if s.acceptance_rate is not none else '—' }}{% if s.acceptance_rate is not none %}%{% endif %}</strong><small>{{ s.accepted }} yes · {{ s.rejected }} no · {{ s.pending }} pending</small></div>
+</div>
+
+<div class="admin-grid">
+  <section class="workspace">
+    <p class="eyebrow">CAUSE MIX</p><h2>How drivers were classified</h2>
+    {% set maxc = (d.causes|map(attribute=1)|max) if d.causes else 1 %}
+    {% for cause, n in d.causes %}
+      <div class="hbar"><span class="hbar-label">{{ CAUSE_LABELS.get(cause, cause) }}</span>
+        <span class="hbar-track"><span class="hbar-fill cause-{{ cause }}" style="width: {{ (100 * n / maxc)|round }}%"></span></span>
+        <span class="hbar-n">{{ n }}</span></div>
+    {% else %}<p class="muted">No drivers yet.</p>{% endfor %}
+    <p class="muted small">A high “Unexplained” share means analysts need to add evidence, not that the AI is failing.</p>
+  </section>
+  <section class="workspace">
+    <p class="eyebrow">SYSTEM</p><h2>AI and cost</h2>
+    <dl class="kv">
+      <dt>Provider / model</dt><dd>{{ llm.provider|title }} · {{ llm.model }}</dd>
+      <dt>API key set</dt><dd>{{ 'Yes' if llm.key else 'No (calculated summaries only)' }}</dd>
+      <dt>Avg AI latency</dt><dd>{{ s.avg_latency or '—' }} ms</dd>
+      <dt>Tokens used</dt><dd>{{ s.tokens_in }} in · {{ s.tokens_out }} out</dd>
+      <dt>Avg evidence coverage</dt><dd>{{ s.avg_explained }}%</dd>
+    </dl>
+  </section>
+</div>
+
+<div class="admin-grid">
+  <section class="workspace">
+    <p class="eyebrow">BY BUSINESS UNIT</p><h2>Activity</h2>
+    <table class="results-table compact"><thead><tr><th>Unit</th><th>Reports</th><th>Avg conf.</th><th>Latest month</th></tr></thead>
+    <tbody>{% for u in d.units %}<tr><td><a href="{{ url_for('reports', unit=u.business_unit) }}">{{ u.business_unit }}</a></td><td>{{ u.runs }}</td><td>{{ u.avg_conf|int }}</td><td>{{ u.latest_period }}</td></tr>{% endfor %}</tbody></table>
+  </section>
+  <section class="workspace">
+    <p class="eyebrow">MARKED NOT USABLE</p><h2>Analyst feedback</h2>
+    {% for x in d.rejected %}<p><a href="{{ url_for('report', report_id=x.id) }}">#{{ x.id }}</a> {{ x.business_unit }} {{ x.period }} — <em>{{ x.review_comment or 'no comment' }}</em></p>
+    {% else %}<p class="muted">Nothing rejected yet.</p>{% endfor %}
+  </section>
+</div>
+
+<section class="workspace">
+  <p class="eyebrow">RECENT</p><h2>Latest reports</h2>
+  <div class="table-scroll"><table class="results-table compact">
+    <thead><tr><th>#</th><th>Created (UTC)</th><th>Month</th><th>Unit</th><th>Source</th><th>Confidence</th><th>Guardrails</th><th>Review</th></tr></thead>
+    <tbody>{% for r in recent %}<tr><td><a href="{{ url_for('report', report_id=r.id) }}">#{{ r.id }}</a></td><td>{{ r.created_at }}</td><td>{{ r.period }}</td><td>{{ r.business_unit }}</td>
+      <td><span class="chip {{ 'chip-ai' if r.status == 'ai' else 'chip-calc' }}">{{ 'AI' if r.status == 'ai' else 'Calculated' }}</span></td><td>{{ r.overall_confidence }}</td><td>{{ r.guard_count }}</td><td><span class="chip review-{{ r.review }}">{{ r.review|title }}</span></td></tr>{% endfor %}</tbody>
+  </table></div>
+</section>
+{% endblock %}
