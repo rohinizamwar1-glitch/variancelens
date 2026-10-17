@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+{% block title %}New review{% endblock %}
+{% block content %}
+<section class="intro">
+  <p class="eyebrow">MONTH-END REVIEW</p>
+  <h1>Why did we miss the forecast?</h1>
+  <p class="intro-copy">Enter forecast and actuals by category. VarianceLens calculates the drivers first, then writes an explanation you can defend, and tells you plainly where the data cannot explain the gap.</p>
+</section>
+
+{% if errors %}
+  <div class="error-message" role="alert">
+    <strong>Please fix the following:</strong>
+    <ul>{% for e in errors %}<li>{{ e }}</li>{% endfor %}</ul>
+  </div>
+{% endif %}
+
+<form method="post" action="{{ url_for('analyze_route') }}" id="variance-form" novalidate>
+  <section class="workspace">
+    <div class="section-heading">
+      <div><p class="eyebrow">01 / REVIEW DETAILS</p><h2>What are you reviewing?</h2></div>
+      <a class="text-link" href="{{ url_for('index', sample=1) }}">Load sample (Glowkind D2C, Sep 2026)</a>
+    </div>
+    <div class="field-grid">
+      <div class="option-field">
+        <label for="period">Month</label>
+        <input id="period" name="period" type="month" value="{{ form.period }}" required>
+      </div>
+      <div class="option-field">
+        <label for="business_unit">Business unit / cost centre</label>
+        <input id="business_unit" name="business_unit" type="text" maxlength="80" value="{{ form.business_unit }}" placeholder="e.g. D2C India" required>
+        <p>Used to compare with earlier months of the same unit.</p>
+      </div>
+      <div class="option-field">
+        <label for="amount_threshold">Material if variance ≥ (amount)</label>
+        <input id="amount_threshold" name="amount_threshold" type="number" min="0" step="1" value="{{ form.amount_threshold }}" required>
+      </div>
+      <div class="option-field">
+        <label for="pct_threshold">… or variance ≥ (% of forecast)</label>
+        <input id="pct_threshold" name="pct_threshold" type="number" min="0" max="100" step="0.1" value="{{ form.pct_threshold }}" required>
+      </div>
+    </div>
+  </section>
+
+  <section class="workspace">
+    <div class="section-heading">
+      <div><p class="eyebrow">02 / YOUR FIGURES</p><h2>Forecast vs actual by category</h2></div>
+      <span class="saved-note"><span class="saved-dot"></span>Units and evidence are optional, but they raise confidence</span>
+    </div>
+    <div class="table-scroll">
+      <table class="entry-table">
+        <thead>
+          <tr>
+            <th>Category</th><th>Forecast</th><th>Actual</th><th>Better outcome</th>
+            <th>Units (fcst)</th><th>Units (actual)</th><th>Evidence you have</th><th>Short note</th><th></th>
+          </tr>
+        </thead>
+        <tbody id="category-rows">
+          {% for row in form.rows %}
+          <tr class="entry-row">
+            <td><input name="category" type="text" value="{{ row.category or '' }}" placeholder="e.g. Website sales" aria-label="Category"></td>
+            <td><input name="forecast" type="number" step="0.01" value="{{ row.forecast or '' }}" aria-label="Forecast"></td>
+            <td><input name="actual" type="number" step="0.01" value="{{ row.actual or '' }}" aria-label="Actual"></td>
+            <td>
+              <select name="preferred_direction" aria-label="Better outcome">
+                <option value="higher" {{ 'selected' if row.preferred_direction != 'lower' }}>Higher is better</option>
+                <option value="lower" {{ 'selected' if row.preferred_direction == 'lower' }}>Lower is better</option>
+              </select>
+            </td>
+            <td><input name="units_forecast" type="number" step="any" value="{{ row.units_forecast or '' }}" aria-label="Forecast units" class="short"></td>
+            <td><input name="units_actual" type="number" step="any" value="{{ row.units_actual or '' }}" aria-label="Actual units" class="short"></td>
+            <td>
+              <select name="evidence_tag" aria-label="Evidence">
+                {% for key, label in EVIDENCE_TAGS.items() %}
+                  <option value="{{ key }}" {{ 'selected' if (row.evidence_tag or 'none') == key }}>{{ label }}</option>
+                {% endfor %}
+              </select>
+            </td>
+            <td><input name="row_note" type="text" maxlength="240" value="{{ row.row_note or '' }}" placeholder="Source of the evidence" aria-label="Note"></td>
+            <td><button type="button" class="icon-button remove-row" aria-label="Remove row">×</button></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <button class="button button-secondary" type="button" id="add-category"><span class="plus" aria-hidden="true">+</span> Add category</button>
+  </section>
+
+  <section class="workspace">
+    <div class="section-heading">
+      <div><p class="eyebrow">03 / CONTEXT</p><h2>Anything leadership should know?</h2></div>
+    </div>
+    <div class="option-field">
+      <label for="analyst_notes">Supporting notes (optional)</label>
+      <textarea id="analyst_notes" name="analyst_notes" rows="3" maxlength="1500" placeholder="Only facts you can back up, e.g. 'Courier rate card revised from 1 Sep.'">{{ form.analyst_notes or '' }}</textarea>
+      <p>The AI may only use what you write here and the numbers above. It will not guess a cause you have not given.</p>
+    </div>
+    <div class="form-actions">
+      <span class="muted">AI: {{ llm.provider|title }} · {{ llm.model }}{% if not llm.key %} · <strong>no key set, calculated summary only</strong>{% endif %}</span>
+      <button class="button button-primary" type="submit">Explain variance <span aria-hidden="true">→</span></button>
+    </div>
+  </section>
+</form>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  const body = document.getElementById("category-rows");
+  document.getElementById("add-category").addEventListener("click", () => {
+    const row = body.querySelector(".entry-row").cloneNode(true);
+    row.querySelectorAll("input").forEach(i => i.value = "");
+    row.querySelector("select[name=preferred_direction]").value = "higher";
+    row.querySelector("select[name=evidence_tag]").value = "none";
+    body.appendChild(row);
+    row.querySelector("input").focus();
+  });
+  body.addEventListener("click", e => {
+    if (!e.target.classList.contains("remove-row")) return;
+    const rows = body.querySelectorAll(".entry-row");
+    if (rows.length > 1) e.target.closest("tr").remove();
+    else e.target.closest("tr").querySelectorAll("input").forEach(i => i.value = "");
+  });
+</script>
+{% endblock %}

@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}VarianceLens{% endblock %} · VarianceLens</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='lens.css') }}">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="{{ url_for('index') }}" aria-label="VarianceLens home">
+      <span class="brand-mark" aria-hidden="true">V</span>
+      <span>Variance<span class="brand-light">Lens</span></span>
+    </a>
+    <nav class="nav">
+      <a href="{{ url_for('index') }}" class="{{ 'active' if request.endpoint == 'index' }}">New review</a>
+      <a href="{{ url_for('reports') }}" class="{{ 'active' if request.endpoint in ('reports', 'report') }}">Reports</a>
+      <a href="{{ url_for('admin') }}" class="{{ 'active' if request.endpoint and request.endpoint.startswith('admin') }}">Admin</a>
+    </nav>
+  </header>
+  <main class="page-shell">
+    {% with messages = get_flashed_messages() %}
+      {% for m in messages %}<div class="flash" role="status">{{ m }}</div>{% endfor %}
+    {% endwith %}
+    {% block content %}{% endblock %}
+    <footer class="page-footer">
+      <span>VarianceLens · month-end variance reviews</span>
+      <span>Numbers are calculated before the AI is called. The AI only words the explanation.</span>
+    </footer>
+  </main>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

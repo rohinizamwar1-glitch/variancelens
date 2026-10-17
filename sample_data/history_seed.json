@@ -1,0 +1,134 @@
+[
+  {
+    "period": "2026-06",
+    "business_unit": "Glowkind D2C (India)",
+    "amount_threshold": "50000",
+    "pct_threshold": "5",
+    "analyst_notes": "",
+    "rows": [
+      {
+        "category": "Website sales",
+        "forecast": "3900000",
+        "actual": "3700000",
+        "preferred_direction": "higher",
+        "evidence_tag": "none"
+      },
+      {
+        "category": "Marketplace sales",
+        "forecast": "2700000",
+        "actual": "2760000",
+        "preferred_direction": "higher",
+        "evidence_tag": "none"
+      },
+      {
+        "category": "Performance marketing",
+        "forecast": "840000",
+        "actual": "870000",
+        "preferred_direction": "lower",
+        "evidence_tag": "none"
+      },
+      {
+        "category": "Shipping & logistics",
+        "forecast": "500000",
+        "actual": "505000",
+        "preferred_direction": "lower",
+        "evidence_tag": "none"
+      },
+      {
+        "category": "Salaries",
+        "forecast": "1400000",
+        "actual": "1400000",
+        "preferred_direction": "lower",
+        "evidence_tag": "none"
+      }
+    ]
+  },
+  {
+    "period": "2026-07",
+    "business_unit": "Glowkind D2C (India)",
+    "amount_threshold": "50000",
+    "pct_threshold": "5",
+    "analyst_notes": "",
+    "rows": [
+      {
+        "category": "Website sales",
+        "forecast": "4000000",
+        "actual": "3760000",
+        "preferred_direction": "higher",
+        "evidence_tag": "none"
+      },
+      {
+        "category": "Marketplace sales",
+        "forecast": "2700000",
+        "actual": "2760000",
+        "preferred_direction": "higher",
+        "evidence_tag": "none"
+      },
+      {
+        "category": "Performance marketing",
+        "forecast": "860000",
+        "actual": "850000",
+        "preferred_direction": "lower",
+        "evidence_tag": "none"
+      },
+      {
+        "category": "Shipping & logistics",
+        "forecast": "500000",
+        "actual": "505000",
+        "preferred_direction": "lower",
+        "evidence_tag": "none"
+      },
+      {
+        "category": "Salaries",
+        "forecast": "1400000",
+        "actual": "1400000",
+        "preferred_direction": "lower",
+        "evidence_tag": "none"
+      }
+    ]
+  },
+  {
+    "period": "2026-08",
+    "business_unit": "Glowkind D2C (India)",
+    "amount_threshold": "50000",
+    "pct_threshold": "5",
+    "analyst_notes": "",
+    "rows": [
+      {
+        "category": "Website sales",
+        "forecast": "4100000",
+        "actual": "3820000",
+        "preferred_direction": "higher",
+        "evidence_tag": "none"
+      },
+      {
+        "category": "Marketplace sales",
+        "forecast": "2700000",
+        "actual": "2760000",
+        "preferred_direction": "higher",
+        "evidence_tag": "none"
+      },
+      {
+        "category": "Performance marketing",
+        "forecast": "880000",
+        "actual": "905000",
+        "preferred_direction": "lower",
+        "evidence_tag": "none"
+      },
+      {
+        "category": "Shipping & logistics",
+        "forecast": "500000",
+        "actual": "505000",
+        "preferred_direction": "lower",
+        "evidence_tag": "none"
+      },
+      {
+        "category": "Salaries",
+        "forecast": "1400000",
+        "actual": "1400000",
+        "preferred_direction": "lower",
+        "evidence_tag": "none"
+      }
+    ]
+  }
+]

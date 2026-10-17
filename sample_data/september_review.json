@@ -1,0 +1,16 @@
+{
+  "period": "2026-09",
+  "business_unit": "Glowkind D2C (India)",
+  "amount_threshold": "50000",
+  "pct_threshold": "5",
+  "analyst_notes": "Courier partner revised its rate card from 1 September. Festive pre-sale ads started in the last week of September.",
+  "rows": [
+    {"category": "Website sales", "forecast": "4200000", "actual": "3610000", "preferred_direction": "higher", "units_forecast": "6000", "units_actual": "5050", "evidence_tag": "none", "row_note": ""},
+    {"category": "Marketplace sales", "forecast": "2800000", "actual": "2950000", "preferred_direction": "higher", "units_forecast": "", "units_actual": "", "evidence_tag": "none", "row_note": ""},
+    {"category": "Performance marketing", "forecast": "900000", "actual": "1180000", "preferred_direction": "lower", "units_forecast": "", "units_actual": "", "evidence_tag": "rate_change", "row_note": "Cost per 1,000 impressions on Meta rose during festive pre-sale"},
+    {"category": "Influencer fees", "forecast": "150000", "actual": "410000", "preferred_direction": "lower", "units_forecast": "", "units_actual": "", "evidence_tag": "timing", "row_note": "Diwali campaign invoice booked in Sept; budgeted for Oct"},
+    {"category": "Shipping & logistics", "forecast": "520000", "actual": "610000", "preferred_direction": "lower", "units_forecast": "8800", "units_actual": "8300", "evidence_tag": "rate_change", "row_note": "New courier rate card"},
+    {"category": "Packaging", "forecast": "260000", "actual": "248000", "preferred_direction": "lower", "units_forecast": "", "units_actual": "", "evidence_tag": "none", "row_note": ""},
+    {"category": "Salaries", "forecast": "1450000", "actual": "1450000", "preferred_direction": "lower", "units_forecast": "", "units_actual": "", "evidence_tag": "none", "row_note": ""}
+  ]
+}
